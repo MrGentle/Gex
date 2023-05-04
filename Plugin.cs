@@ -2,9 +2,11 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using Gex.Library;
+using Gex.Modules;
 using HarmonyLib;
 
-namespace Gex {
+namespace Gex
+{
 
     [BepInPlugin("no.gentle.plugin.gex", "Gex", "1.0.0")]
     public class Plugin : BaseUnityPlugin {
@@ -14,9 +16,10 @@ namespace Gex {
         public static Harmony harmony = new(PluginInfo.PLUGIN_NAME);
         public static BepInEx.PluginInfo pluginInfo;
 
-        private ItemGUI itemGui;
-        private CamController camController;
+        private ItemGUIModule itemGui;
+        private FreeCamModule camController;
         private ObjectFinder objectFinder;
+        private PlayerStateModule playerStateModule;
         
         public ConfigEntry<bool> configBlazeLBUpdates;
 
@@ -28,9 +31,10 @@ namespace Gex {
             ConfigInstance = Config;
 
             //Initialize custom components
-            itemGui = Instance.gameObject.AddComponent<ItemGUI>();
-            camController = Instance.gameObject.AddComponent<CamController>();
+            itemGui = Instance.gameObject.AddComponent<ItemGUIModule>();
+            camController = Instance.gameObject.AddComponent<FreeCamModule>();
             objectFinder = Instance.gameObject.AddComponent<ObjectFinder>();
+            playerStateModule = Instance.gameObject.AddComponent<PlayerStateModule>();
 
             //Initialize statics
             Drawer.InitializeDrawer();
@@ -44,6 +48,7 @@ namespace Gex {
             Destroy(itemGui);
             Destroy(camController);
             Destroy(objectFinder);
+            Destroy(playerStateModule);
         }
     }
 

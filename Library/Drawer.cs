@@ -24,8 +24,8 @@ namespace Gex.Library {
             Camera camera = ObjectFinder.mainCam;
             if (!camera) {
                 return;
-                Debug.Log("NO CAM");
             }
+
             thicc *= 0.01f;
 
             #region Matrix
