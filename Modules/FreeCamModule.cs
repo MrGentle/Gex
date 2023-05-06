@@ -17,57 +17,56 @@ namespace Gex.Modules
     {
         private bool active = false;
         private Camera mainCam;
-        List<BoxCollider2D> colliders = new List<BoxCollider2D>();
 
         readonly float BASE_ORTHOGRAPHIC_SIZE = 9;
         readonly Vector3 BASE_LOCAL_SCALE = new Vector3(40, 0, 40);
 
+        Rect wRect = new Rect(20, 20, 300, 50);
 
+        bool showGround = false;
+        bool showPlayer = false;
+        bool showGPIs = false;
 
-        private void Update()
+        private void ItemWindow(int id)
         {
-            if (Input.GetKeyDown(KeyCode.F2))
-            {
+            GUILayout.Label("Hold left shift and left click to teleport player to cursor");
+            GUILayout.Label("Numpad 4-9 to control the free camera");
+            GUILayout.BeginHorizontal();
+                GUILayout.BeginVertical();
+                    GUILayout.Label("Boxdrawer");
+                    showGround = GUILayout.Toggle(showGround, "Ground");
+                    showPlayer = GUILayout.Toggle(showPlayer, "Player");
+                    showGPIs = GUILayout.Toggle(showGPIs, "Interactables");
+                GUILayout.EndVertical();
+
+            GUILayout.EndHorizontal();
+
+            GUI.DragWindow();
+        }
+
+        private void Update() {
+            if (Input.GetKeyDown(KeyCode.F2)) {
                 active = !active;
-                if (active)
-                {
-                    var masks = ObjectFinder.bitMasks;
-                    if (masks.Count > 0) foreach(var mask in masks) mask.transform.localScale = new Vector3(99999999, 0, 9999999);
+                Cursor.visible = active;
+                if (active) {
+                    foreach(var mask in ObjectFinder.bitMasks) mask.transform.localScale = new Vector3(99999999, 0, 9999999);
+                    foreach(var hud in ObjectFinder.huds) hud.SetActive(false);
 
-                    var huds = ObjectFinder.huds;
-                    if (huds.Count > 0) foreach(var hud in huds) hud.SetActive(false);
-
-                    foreach(RoomBackground roomBg in ObjectFinder.roomBackgrounds) roomBg.gameObject.SetActive(false);
+                    Debug.Log(ObjectFinder.roomBackgrounds.Length);
+                    foreach(RoomBackground roomBg in ObjectFinder.roomBackgrounds) { roomBg.gameObject.SetActive(false); }
                     foreach(var hudCam in ObjectFinder.hudCameras) hudCam.SetActive(false);
 
-                    if (mainCam)
-                    {
+                    if (mainCam) {
                         mainCam.orthographicSize = 20;
                         mainCam.gameObject.GetComponent<RetroCamera>().enabled = false;
-                        colliders.Clear();
-                        foreach (var gameObj in FindObjectsOfType<GameObject>())
-                        {
-                            if (gameObj)
-                            {
-                                if (gameObj.name == "Combined Collider")
-                                {
-                                    if (gameObj.GetComponent<BoxCollider2D>() != null) colliders.Add(gameObj.GetComponent<BoxCollider2D>());
-                                }
-                            }
-                        }
                     }
                 }
                 else
                 {
                     if (mainCam)
                     {
-                        var masks = ObjectFinder.bitMasks;
-                        if (masks.Count > 0) {
-                            foreach(var mask in masks) mask.transform.localScale = BASE_LOCAL_SCALE;
-                        }
-
-                        var huds = ObjectFinder.huds;
-                        if (huds.Count > 0) foreach(var hud in huds) hud.SetActive(true);
+                        foreach(var mask in ObjectFinder.bitMasks) mask.transform.localScale = BASE_LOCAL_SCALE;
+                        foreach(var hud in ObjectFinder.huds) hud.SetActive(true);
 
                         foreach(RoomBackground roomBg in ObjectFinder.roomBackgrounds) roomBg.gameObject.SetActive(true);
                         foreach(var hudCam in ObjectFinder.hudCameras) hudCam.SetActive(true);
@@ -82,59 +81,101 @@ namespace Gex.Modules
 
 
 
-        private void OnRenderObject()
-        {
+        private void OnRenderObject() {
             if(mainCam != null && Camera.current == mainCam) {
-                foreach (var c in colliders)
-                {
-                    var currentDim = DimensionManager.Instance.currentDimension == EBits.BITS_8 ? "Middleground_8" : "Middleground_16";
+                var drawable8 = new List<string>();
+                var drawable16 = new List<string>();
 
-                    if (c.isActiveAndEnabled && c.transform.parent.name == currentDim)
+                if (showGround) {
+                    drawable8.AddRange(new string[] {"Tilemap_8"});
+                    drawable16.AddRange(new string[] {"Tilemap_16"});
+                }
+
+                if (showGPIs) {
+                    drawable8.AddRange(new string[] {"GPI_8", "GPI_8_and_16"});
+                    drawable16.AddRange(new string[] { "GPI_16", "GPI_8_and_16"});
+                }
+
+                var tags = new List<string>();
+                foreach (var c in ObjectFinder.colliders) {
+                    var currentDimension = DimensionManager.Instance.currentDimension;
+                    var shouldBeDrawn = false;
+                    
+                    var parent = c.transform.parent;
+                    if (c.gameObject.name == "Player" && showPlayer) shouldBeDrawn = true;
+
+                    while (parent != null) {
+                        if (currentDimension == EBits.BITS_8) {
+                            if (drawable8.Contains(parent.name)) {
+                                shouldBeDrawn = true;
+                                break;
+                            }
+                        }
+                        if (currentDimension == EBits.BITS_16) {
+                            if (drawable16.Contains(parent.name)) {
+                                shouldBeDrawn = true;
+                                break;
+                            }
+                        }
+                        parent = parent.parent;
+                    }
+                    if (c && c.isActiveAndEnabled && shouldBeDrawn)
                     {
                         switch (c.tag)
                         {
                             case "Untagged":
-                                Drawer.DrawCube(c.offset - new Vector2(500, -500), c.bounds.size, new Color(0, 1, 0, 0.5f));
+                                Drawer.DrawCube(new Vector2(c.transform.position.x + c.offset.x, c.transform.position.y + c.offset.y), c.bounds.size, new Color(1, 1, 1, 0.5f));
+                                break;
+                            case "NotHookable":
+                                Drawer.DrawCube(new Vector2(c.transform.position.x + c.offset.x, c.transform.position.y + c.offset.y), c.bounds.size, new Color(1, 1, 0, 0.5f));
+                                break;
+                            case "NotClimbable":
+                                Drawer.DrawCube(new Vector2(c.transform.position.x + c.offset.x, c.transform.position.y + c.offset.y), c.bounds.size, new Color(0, 1, 1, 0.5f));
+                                break;
+                            case "GraplouBounceBack":
+                                Drawer.DrawCube(new Vector2(c.transform.position.x + c.offset.x, c.transform.position.y + c.offset.y), c.bounds.size, new Color(1, 0, 1, 0.5f));
+                                break;
+                            case "GraplouTarget":
+                                Debug.Log(c.gameObject.name);
+                                Drawer.DrawCube(new Vector2(c.transform.position.x + c.offset.x, c.transform.position.y + c.offset.y), c.bounds.size, new Color(0, 0, 0, 0.5f));
                                 break;
                             case "NotHookable_NotClimbable":
-                                Drawer.DrawCube(c.offset - new Vector2(500, -500), c.bounds.size, Color.red);
+                                Drawer.DrawCube(new Vector2(c.transform.position.x + c.offset.x, c.transform.position.y + c.offset.y), c.bounds.size, new Color(1, 0, 0, 0.5f));
                                 break;
                             case "NotClimbable_GraplouBounceBack":
-                                Drawer.DrawCube(c.offset - new Vector2(500, -500), c.bounds.size, Color.blue);
+                                Drawer.DrawCube(new Vector2(c.transform.position.x + c.offset.x, c.transform.position.y + c.offset.y), c.bounds.size, new Color(0, 0, 1, 0.5f));
                                 break;
                             default:
-                                Drawer.DrawCube(c.offset - new Vector2(500, -500), c.bounds.size, Color.white);
+                                if (!tags.Contains(c.tag)) {
+                                    Debug.Log(c.tag);
+                                    tags.Add(c.tag);
+                                }
+                                Drawer.DrawCube(new Vector2(c.transform.position.x + c.offset.x, c.transform.position.y + c.offset.y), c.bounds.size, Color.white);
                                 break;
 
                         }
                     }
                 }
-
-                Drawer.DrawCube(mainCam.ScreenToWorldPoint(Input.mousePosition), new Vector2(1, 1), Color.red);
-                Drawer.DrawCube(new Vector3(-1000, 1000, 0) + mainCam.transform.position, new Vector2(4, 5), Color.white);
             }
         }
 
         private void FixedUpdate()
         {
             if (!mainCam) mainCam = ObjectFinder.mainCam;
-
-            Debug.Log(PlayerManager.Instance.Player.transform.position);
             //TODO: Allow bepin config for keybinds
             if (mainCam && active)
             {
-                if (Input.GetMouseButton(0)) {
+                if (Input.GetKey(KeyCode.LeftShift) && Input.GetMouseButton(0)) {
                     var mousePos = mainCam.ScreenToWorldPoint(new Vector2(Input.mousePosition.x, Input.mousePosition.y));
                     PlayerManager.Instance.Player.transform.position = new Vector2(mousePos.x, mousePos.y);
-                    
                 }
 
-                if (Input.GetKey(KeyCode.Keypad7))
+                if (Input.GetKey(KeyCode.Keypad9))
                 {
                     mainCam.orthographicSize = Math.Max(mainCam.orthographicSize - (float)Math.Ceiling(mainCam.orthographicSize / 10), BASE_ORTHOGRAPHIC_SIZE);
                 }
 
-                if (Input.GetKey(KeyCode.Keypad9))
+                if (Input.GetKey(KeyCode.Keypad7))
                 {
                     mainCam.orthographicSize += (int)Math.Ceiling(mainCam.orthographicSize / 10);
                 }
@@ -161,11 +202,9 @@ namespace Gex.Modules
             }
         }
 
-        private void OnGUI()
-        {
-            if (active)
-            {
-                GUILayout.Label("Free cam active");
+        private void OnGUI() {
+            if (active) {
+                wRect = GUILayout.Window(7878002, wRect, ItemWindow, "Free cam");
             }
         }
 

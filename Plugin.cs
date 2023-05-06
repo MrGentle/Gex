@@ -4,6 +4,7 @@ using BepInEx.Logging;
 using Gex.Library;
 using Gex.Modules;
 using HarmonyLib;
+using UnityEngine;
 
 namespace Gex
 {
@@ -49,6 +50,14 @@ namespace Gex
             Destroy(camController);
             Destroy(objectFinder);
             Destroy(playerStateModule);
+        }
+
+        private void OnGUI() {
+            GUILayout.BeginVertical();
+            GUILayout.Label("F1 - Unlocks");
+            GUILayout.Label("F2 - Free cam");
+            GUILayout.Label("F3 - Statemanager");
+            GUILayout.EndVertical();
         }
     }
 

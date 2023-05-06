@@ -13,6 +13,7 @@ namespace Gex.Modules {
         private bool show = false;
         Rect wRect = new Rect(20, 20, 120, 50);
         Vector2 savedPosition = new Vector2(-1, -1);
+        Queue<string> lastStates = new Queue<string>();
 
         private void Update() {
             if (Input.GetKeyDown(KeyCode.F3)) {
@@ -23,16 +24,18 @@ namespace Gex.Modules {
             }
 
 
-            if (show) {
-                if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.R)) {
-                    SavePosition();
-                } else if (Input.GetKeyDown(KeyCode.R)) LoadPosition();
-            }
+            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.R)) {
+                SavePosition();
+            } else if (Input.GetKeyDown(KeyCode.R)) LoadPosition();
+        }
+
+        private void FixedUpdate() {
+            GetPlayerState();
         }
 
         private void OnGUI() {
             if (show) {
-                wRect = GUILayout.Window(33, wRect, ItemWindow, "State manager");
+                wRect = GUILayout.Window(7878003, wRect, ItemWindow, "State manager");
             }
         }
 
@@ -48,6 +51,14 @@ namespace Gex.Modules {
 
                     if (GUILayout.Button("Reload Level")) {
                         FullCheckpointReload();
+                    }
+
+                    GUILayout.Space(30);
+
+                    GUILayout.Label("Player state");
+                    GUILayout.Label(lastStates.Count.ToString());
+                    foreach(string state in lastStates) {
+                        GUILayout.Label(state);
                     }
                 GUILayout.EndVertical();
 
@@ -134,6 +145,19 @@ namespace Gex.Modules {
 			i.levelInitializerParams = new LevelInitializerParams();
             i.levelInitializerParams.entranceCutsceneType = null;
             LevelManager.Instance.LoadLevel(i);
+        }
+
+        private void GetPlayerState() {
+            var currentState = PlayerManager.Instance.Player.StateMachine.CurrentState;
+            if (lastStates.Count > 0) {
+                if (lastStates.Last() != currentState.name) {
+                    lastStates.Enqueue(currentState.name);
+                } 
+            } else lastStates.Enqueue(currentState.name);
+
+            if (lastStates.Count > 5) {
+                lastStates.Dequeue();
+            }
         }
     }
 }
