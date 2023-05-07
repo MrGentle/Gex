@@ -11,16 +11,14 @@ namespace Gex.Modules {
     internal class PlayerStateModule : MonoBehaviour {
         
         private bool show = false;
-        Rect wRect = new Rect(20, 20, 120, 50);
+        Rect wRect = new Rect(20, 600, 120, 50);
         Vector2 savedPosition = new Vector2(-1, -1);
         Queue<string> lastStates = new Queue<string>();
 
         private void Update() {
-            if (Input.GetKeyDown(KeyCode.F3)) {
+            if (Input.GetKeyDown(KeyCode.F4)) {
                 show = !show;
-                Cursor.visible = show;
-                Debug.Log(show);
-                //Manager<InventoryManager>.Instance.RemoveAllItems();
+                CursorHandler.Show(show);
             }
 
 
@@ -138,25 +136,26 @@ namespace Gex.Modules {
         }
 
         private void LoadStage(ELevel level) {
-            AudioManager.Instance.StopMusic();
-            LevelLoadingInfo i = new LevelLoadingInfo(level.ToString() + "_Build", false, true, LoadSceneMode.Single, ELevelEntranceID.NONE, DimensionManager.Instance.currentDimension);
-            i.showLevelIntro = false;
-
-			i.levelInitializerParams = new LevelInitializerParams();
-            i.levelInitializerParams.entranceCutsceneType = null;
-            LevelManager.Instance.LoadLevel(i);
+            Manager<PauseManager>.Instance.Resume();
+			Manager<AudioManager>.Instance.StopMusic();
+			LevelLoadingInfo levelLoadingInfo = new LevelLoadingInfo(level.ToString() + "_Build", true, true, DimensionManager.Instance.currentDimension);
+			levelLoadingInfo.showLevelIntro = false;
+			levelLoadingInfo.positionPlayer = false;
+			Manager<LevelManager>.Instance.LoadLevel(levelLoadingInfo);
         }
 
         private void GetPlayerState() {
-            var currentState = PlayerManager.Instance.Player.StateMachine.CurrentState;
-            if (lastStates.Count > 0) {
-                if (lastStates.Last() != currentState.name) {
-                    lastStates.Enqueue(currentState.name);
-                } 
-            } else lastStates.Enqueue(currentState.name);
+            if (ObjectFinder.player) {
+                var currentState = ObjectFinder.player.StateMachine.CurrentState;
+                if (lastStates.Count > 0) {
+                    if (lastStates.Last() != currentState.name) {
+                        lastStates.Enqueue(currentState.name);
+                    } 
+                } else lastStates.Enqueue(currentState.name);
 
-            if (lastStates.Count > 5) {
-                lastStates.Dequeue();
+                if (lastStates.Count > 5) {
+                    lastStates.Dequeue();
+                }
             }
         }
     }

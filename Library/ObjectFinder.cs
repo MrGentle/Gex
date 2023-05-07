@@ -1,17 +1,18 @@
-﻿using System;
+﻿using Rewired;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace Gex.Library {
 	public class ObjectFinder : MonoBehaviour {
-		public static Camera mainCam;
+		public static Camera mainCam = null;
+		public static PlayerController player = null;
+		public static InGameHud hud = null;
 
 		public static RoomBackground[] roomBackgrounds = new RoomBackground[0];
 		public static BoxCollider2D[] colliders = new BoxCollider2D[0];
 
-		public static List<GameObject> huds = new List<GameObject>();
-		public static List<GameObject> hudCameras = new List<GameObject>();
 		public static List<GameObject> bitMasks = new List<GameObject>();
 
 		private int counter = 30;
@@ -30,12 +31,11 @@ namespace Gex.Library {
 			counter++;
 			if (counter >= 30) {
 				GetComponentFromGameObject(ref mainCam, "Main Camera");
-				GetGameObjectByNamesArray(ref huds, new [] {"InGameHud", "InGameHud(Clone)"});
 				GetGameObjectByNamesArray(ref bitMasks, new [] {"8Bit_Mask", "16Bit_Mask"});
-				GetGameObjectsByComponent<OverHudCamScissorRect>(ref hudCameras);
-				//GetComponents(ref groundColliders, "Combined Collider");
 				GetComponents(ref colliders);
 				GetComponents(ref roomBackgrounds);
+				GetSingleComponent(ref player);
+				GetSingleComponent(ref hud);
 				counter = 0;
 				clear = false;
 			}
@@ -52,9 +52,7 @@ namespace Gex.Library {
 		}
 
 		private void GetComponentsInChildren<T>(ref T[] input, string gameObjectName) where T : UnityEngine.Object {
-			Debug.Log(input.Length);
 			if (input.Length != 0 && input.All(component => component != null) && !clear) {
-				Debug.Log("returned");
 				return;
 			}
 
@@ -68,6 +66,12 @@ namespace Gex.Library {
 
 			input = components.ToArray();
 
+		}
+
+		private void GetSingleComponent<T>(ref T input) where T: UnityEngine.Object {
+			if (input == null) {
+				input = FindObjectOfType<T>();
+			}
 		}
 
 		private void GetComponents<T>(ref T[] input, string gameObjectName = null) where T : UnityEngine.Object {

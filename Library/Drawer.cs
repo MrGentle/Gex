@@ -20,13 +20,14 @@ namespace Gex.Library {
             lineMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
         }
 
-		public static void DrawCube(Vector2 center, Vector2 size, Color color, float thicc = 6f, Alignment align = Alignment.INSIDE) {
+
+		public static void DrawCube(Vector2 center, Vector2 size, Color color, float LineWidth = 1f, Alignment align = Alignment.INSIDE) {
             Camera camera = ObjectFinder.mainCam;
             if (!camera) {
                 return;
             }
 
-            thicc *= 0.01f;
+            LineWidth *= (0.01f * (camera.orthographicSize/3));
 
             #region Matrix
 
@@ -40,10 +41,11 @@ namespace Gex.Library {
             Vector3 topLeft = new Vector2(center.x - size.x/2, center.y + size.y/2);        // Top Left
             Vector3 topRight = new Vector2(center.x + size.x/2, center.y + size.y/2);       // Top Right
             Vector3 bottomRight = new Vector2(center.x + size.x/2, center.y - size.y/2);    // Bottom Righ
-            Vector3 offsetX = new Vector3(thicc, 0, 0);
-            Vector3 offsetY = new Vector3(0, thicc * (byte)align, 0);
-            Vector3 offsetXY = new Vector3(thicc, thicc, 0);
-            Vector3 offsetXY2 = new Vector3(thicc, -thicc, 0);
+
+            Vector3 offsetX = new Vector3(LineWidth, 0, 0);
+            Vector3 offsetY = new Vector3(0, LineWidth * (byte)align, 0);
+            Vector3 offsetXY = new Vector3(LineWidth, LineWidth, 0);
+            Vector3 offsetXY2 = new Vector3(LineWidth, -LineWidth, 0);
 
             GL.Vertex(bottomLeft - offsetY);
             GL.Vertex(topLeft + offsetY);
@@ -58,11 +60,11 @@ namespace Gex.Library {
             GL.Vertex(topLeft);
             GL.Vertex(topRight);
             if (align == Alignment.INSIDE) {
-                GL.Vertex3(topRight.x, topRight.y - thicc, topRight.z);
-                GL.Vertex3(topLeft.x, topLeft.y - thicc, topLeft.z);
+                GL.Vertex3(topRight.x, topRight.y - LineWidth, topRight.z);
+                GL.Vertex3(topLeft.x, topLeft.y - LineWidth, topLeft.z);
             } else {
-                GL.Vertex3(topRight.x, topRight.y + thicc, topRight.z);
-                GL.Vertex3(topLeft.x, topLeft.y + thicc, topLeft.z);
+                GL.Vertex3(topRight.x, topRight.y + LineWidth, topRight.z);
+                GL.Vertex3(topLeft.x, topLeft.y + LineWidth, topLeft.z);
             }
 
             GL.Vertex(topRight + offsetY);
@@ -78,11 +80,11 @@ namespace Gex.Library {
             GL.Vertex(bottomRight);
             GL.Vertex(bottomLeft);
             if (align == Alignment.INSIDE) {
-                GL.Vertex3(bottomLeft.x, bottomLeft.y + thicc, bottomLeft.z);
-                GL.Vertex3(bottomRight.x, bottomRight.y + thicc, bottomRight.z);
+                GL.Vertex3(bottomLeft.x, bottomLeft.y + LineWidth, bottomLeft.z);
+                GL.Vertex3(bottomRight.x, bottomRight.y + LineWidth, bottomRight.z);
             } else {
-                GL.Vertex3(bottomLeft.x, bottomLeft.y - thicc, bottomLeft.z);
-                GL.Vertex3(bottomRight.x, bottomRight.y - thicc, bottomRight.z);
+                GL.Vertex3(bottomLeft.x, bottomLeft.y - LineWidth, bottomLeft.z);
+                GL.Vertex3(bottomRight.x, bottomRight.y - LineWidth, bottomRight.z);
             }
             
 

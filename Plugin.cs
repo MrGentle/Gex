@@ -17,7 +17,7 @@ namespace Gex
         public static Harmony harmony = new(PluginInfo.PLUGIN_NAME);
         public static BepInEx.PluginInfo pluginInfo;
 
-        private ItemGUIModule itemGui;
+        private UnlocksModule itemGui;
         private FreeCamModule camController;
         private ObjectFinder objectFinder;
         private PlayerStateModule playerStateModule;
@@ -32,7 +32,7 @@ namespace Gex
             ConfigInstance = Config;
 
             //Initialize custom components
-            itemGui = Instance.gameObject.AddComponent<ItemGUIModule>();
+            itemGui = Instance.gameObject.AddComponent<UnlocksModule>();
             camController = Instance.gameObject.AddComponent<FreeCamModule>();
             objectFinder = Instance.gameObject.AddComponent<ObjectFinder>();
             playerStateModule = Instance.gameObject.AddComponent<PlayerStateModule>();
@@ -50,13 +50,14 @@ namespace Gex
             Destroy(camController);
             Destroy(objectFinder);
             Destroy(playerStateModule);
+            harmony.UnpatchSelf();
         }
 
         private void OnGUI() {
             GUILayout.BeginVertical();
-            GUILayout.Label("F1 - Unlocks");
-            GUILayout.Label("F2 - Free cam");
-            GUILayout.Label("F3 - Statemanager");
+            GUILayout.Label("F2 - Items and Unlocks");
+            GUILayout.Label("F3 - Free cam");
+            GUILayout.Label("F4 - Statemanager");
             GUILayout.EndVertical();
         }
     }
