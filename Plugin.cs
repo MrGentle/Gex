@@ -21,6 +21,7 @@ namespace Gex
         private FreeCamModule camController;
         private ObjectFinder objectFinder;
         private PlayerStateModule playerStateModule;
+        private TimeScaleModule timeScaleModule;
         
         public ConfigEntry<bool> configBlazeLBUpdates;
 
@@ -36,6 +37,7 @@ namespace Gex
             camController = Instance.gameObject.AddComponent<FreeCamModule>();
             objectFinder = Instance.gameObject.AddComponent<ObjectFinder>();
             playerStateModule = Instance.gameObject.AddComponent<PlayerStateModule>();
+            timeScaleModule = Instance.gameObject.AddComponent<TimeScaleModule>();
 
             //Initialize statics
             Drawer.InitializeDrawer();
@@ -50,6 +52,7 @@ namespace Gex
             Destroy(camController);
             Destroy(objectFinder);
             Destroy(playerStateModule);
+            Destroy(timeScaleModule);
             harmony.UnpatchSelf();
         }
 

@@ -20,7 +20,6 @@ namespace Gex.Modules
         void Awake() {
             Plugin.harmony.PatchAll(typeof(InvincibilityPatch));
             Plugin.harmony.PatchAll(typeof(ShurikenPatch));
-            
         }
 
         private void Update() {

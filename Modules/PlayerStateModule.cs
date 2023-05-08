@@ -1,11 +1,8 @@
 ﻿using Gex.Library;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static UnityEngine.UI.GridLayoutGroup;
 
 namespace Gex.Modules {
     internal class PlayerStateModule : MonoBehaviour {

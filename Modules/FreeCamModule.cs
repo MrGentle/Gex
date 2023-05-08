@@ -1,6 +1,9 @@
-﻿using Gex.Library;
+﻿using BepInEx.Configuration;
+using Gex.Extensions;
+using Gex.Library;
 using System;
 using System.Collections.Generic;
+using TMPro.Examples;
 using UnityEngine;
 
 
@@ -14,23 +17,42 @@ namespace Gex.Modules {
         Rect wRect = new Rect(20, 300, 300, 50);
 
         bool toggleCam = false;
+        float camAccelTime = 5;
+        float currentAccelTime = 5;
 
         bool showGround = false;
         bool showPlayer = false;
         bool showGPIs = false;
+        bool edgeAligned = false;
         bool renderPlayerInFront = false;
         bool disableCamOnPlayerTeleport = true;
 
+        ConfigEntry<KeyboardShortcut> keyZoomIn;
+        ConfigEntry<KeyboardShortcut> keyZoomOut;
+        ConfigEntry<KeyboardShortcut> keyUp;
+        ConfigEntry<KeyboardShortcut> keyDown;
+        ConfigEntry<KeyboardShortcut> keyLeft;
+        ConfigEntry<KeyboardShortcut> keyRight;
+
+        private void Awake() {
+            keyZoomIn = Plugin.ConfigInstance.Bind("Free Camera", "Zoom in", new KeyboardShortcut(KeyCode.Keypad9));
+            keyZoomOut = Plugin.ConfigInstance.Bind("Free Camera", "Zoom out", new KeyboardShortcut(KeyCode.Keypad7));
+            keyUp = Plugin.ConfigInstance.Bind("Free Camera", "Move up", new KeyboardShortcut(KeyCode.Keypad8));
+            keyDown = Plugin.ConfigInstance.Bind("Free Camera", "Move down", new KeyboardShortcut(KeyCode.Keypad5));
+            keyLeft = Plugin.ConfigInstance.Bind("Free Camera", "Move left", new KeyboardShortcut(KeyCode.Keypad4));
+            keyRight = Plugin.ConfigInstance.Bind("Free Camera", "Move right", new KeyboardShortcut(KeyCode.Keypad6));
+        }
 
         private void GUIWindow(int id) {
             GUILayout.Label("Hold left shift and left click to teleport player to cursor");
-            GUILayout.Label("Numpad 4-9 to control the free camera");
+            GUILayout.Label("Numpad 4-9(Default) to control the free camera");
             GUILayout.BeginHorizontal();
                 GUILayout.BeginVertical();
                     GUILayout.Label("Boxdrawer");
                     showGround = GUILayout.Toggle(showGround, "Ground");
                     showPlayer = GUILayout.Toggle(showPlayer, "Player");
                     showGPIs = GUILayout.Toggle(showGPIs, "Interactables");
+                    edgeAligned = GUILayout.Toggle(edgeAligned, "Edge align hitboxes");
                 GUILayout.EndVertical();
 
                 GUILayout.BeginVertical();
@@ -111,7 +133,7 @@ namespace Gex.Modules {
 
 
         private void OnRenderObject() {
-            if(ObjectFinder.mainCam != null && Camera.current == ObjectFinder.mainCam) {
+            if (ObjectFinder.mainCam != null && Camera.current == ObjectFinder.mainCam) {
                 var drawable8 = new List<string>();
                 var drawable16 = new List<string>();
 
@@ -126,6 +148,7 @@ namespace Gex.Modules {
                 }
 
                 var tags = new List<string>();
+                var align = edgeAligned ? Drawer.Alignment.INSIDE : Drawer.Alignment.CENTERED;
                 foreach (var c in ObjectFinder.colliders) {
                     var currentDimension = DimensionManager.Instance.currentDimension;
                     var shouldBeDrawn = false;
@@ -154,31 +177,34 @@ namespace Gex.Modules {
                         var pos = new Vector2(c.transform.position.x + c.offset.x, c.transform.position.y + c.offset.y);
                         switch (c.tag) {
                             case "Untagged":
-                                Drawer.DrawCube(pos, c.bounds.size, new Color(1, 1, 1, 1f));
+                                Drawer.DrawCube(pos, c.bounds.size, new Color(1, 1, 1, 1f), align);
                                 break;
                             case "NotHookable":
-                                Drawer.DrawCube(pos, c.bounds.size, new Color(1, 1, 0, 1f));
+                                Drawer.DrawCube(pos, c.bounds.size, new Color(1, 1, 0, 1f), align);
                                 break;
                             case "NotClimbable":
-                                Drawer.DrawCube(pos, c.bounds.size, new Color(0, 1, 1, 1f));
+                                Drawer.DrawCube(pos, c.bounds.size, new Color(0, 1, 1, 1f), align);
                                 break;
                             case "GraplouBounceBack":
-                                Drawer.DrawCube(pos, c.bounds.size, new Color(1, 0, 1, 1f));
+                                Drawer.DrawCube(pos, c.bounds.size, new Color(1, 0, 1, 1f), align);
                                 break;
                             case "GraplouTarget":
-                                Drawer.DrawCube(pos, c.bounds.size, new Color(0, 0, 0, 1f));
+                                Drawer.DrawCube(pos, c.bounds.size, new Color(0, 0, 0, 1f), align);
                                 break;
                             case "NotHookable_NotClimbable":
-                                Drawer.DrawCube(pos, c.bounds.size, new Color(1, 0, 0, 1f));
+                                Drawer.DrawCube(pos, c.bounds.size, new Color(1, 0, 0, 1f), align);
                                 break;
                             case "NotClimbable_GraplouBounceBack":
-                                Drawer.DrawCube(pos, c.bounds.size, new Color(0, 0, 1, 1f));
+                                Drawer.DrawCube(pos, c.bounds.size, new Color(0, 0, 1, 1f), align);
+                                break;
+                            case "Player":
+                                Drawer.DrawCube(pos, c.bounds.size, new Color(0, 0.7f, 0.7f, 1f), align);
                                 break;
                             default:
                                 if (!tags.Contains(c.tag)) {
                                     tags.Add(c.tag);
                                 }
-                                Drawer.DrawCube(pos, c.bounds.size, Color.white);
+                                Drawer.DrawCube(pos, c.bounds.size, Color.white, align);
                                 break;
 
                         }
@@ -188,38 +214,30 @@ namespace Gex.Modules {
         }
 
         private void FixedUpdate() {
-            //TODO: Allow bepin config for keybinds
-            if (ObjectFinder.mainCam && active && ObjectFinder.player) {
-                if (Input.GetKey(KeyCode.Keypad9)) {
-                    ObjectFinder.mainCam.orthographicSize = Math.Max(ObjectFinder.mainCam.orthographicSize - (float)Math.Ceiling(ObjectFinder.mainCam.orthographicSize / 20), BASE_ORTHOGRAPHIC_SIZE);
-                }
+            //Free cam movement
+            var cam = ObjectFinder.mainCam;
+            if (cam && active) {
+                var anyButtonPressed = new ConfigEntry<KeyboardShortcut>[] {keyZoomIn, keyZoomOut, keyUp, keyDown, keyLeft, keyRight}.AnyPressed();
 
-                if (Input.GetKey(KeyCode.Keypad7)) {
-                    ObjectFinder.mainCam.orthographicSize += (int)Math.Ceiling(ObjectFinder.mainCam.orthographicSize / 20);
-                }
+                if (anyButtonPressed) {
+                    if (currentAccelTime > 1) currentAccelTime -= 1;
+                } else currentAccelTime = camAccelTime;
 
-                if (Input.GetKey(KeyCode.Keypad4)) {
-                    ObjectFinder.mainCam.transform.position -= new Vector3((int)Math.Ceiling(ObjectFinder.mainCam.orthographicSize / 20), 0, 0);
-                }
+                var fast = (float)Math.Ceiling(cam.orthographicSize / 20) * 1/currentAccelTime;
+                var slow = (float)Math.Ceiling(cam.orthographicSize / 30) * 1/currentAccelTime;
 
-                if (Input.GetKey(KeyCode.Keypad8)) {
-                    ObjectFinder.mainCam.transform.position += new Vector3(0, (int)Math.Ceiling(ObjectFinder.mainCam.orthographicSize / 30), 0);
-                }
+                var x = Util.BoolToInt(keyRight.Pressed()) - Util.BoolToInt(keyLeft.Pressed());
+                var y = Util.BoolToInt(keyUp.Pressed()) - Util.BoolToInt(keyDown.Pressed());
 
-                if (Input.GetKey(KeyCode.Keypad6)) {
-                    ObjectFinder.mainCam.transform.position += new Vector3((int)Math.Ceiling(ObjectFinder.mainCam.orthographicSize / 20), 0, 0);
-                }
+                if (keyZoomIn.Pressed()) cam.orthographicSize = Math.Max(cam.orthographicSize - fast, BASE_ORTHOGRAPHIC_SIZE);
+                if (keyZoomOut.Pressed()) cam.orthographicSize += fast;
 
-                if (Input.GetKey(KeyCode.Keypad5)) {
-                    ObjectFinder.mainCam.transform.position -= new Vector3(0, (int)Math.Ceiling(ObjectFinder.mainCam.orthographicSize / 30), 0);
-                }
+                cam.transform.position += new Vector3(fast * x, slow * y, 0);
             }
         }
 
         private void OnGUI() {
-            if (active) {
-                wRect = GUILayout.Window(7878002, wRect, GUIWindow, "Free cam");
-            }
+            if (active) wRect = GUILayout.Window(7878002, wRect, GUIWindow, "Free cam");
         }
 
     }

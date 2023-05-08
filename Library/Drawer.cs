@@ -21,13 +21,13 @@ namespace Gex.Library {
         }
 
 
-		public static void DrawCube(Vector2 center, Vector2 size, Color color, float LineWidth = 1f, Alignment align = Alignment.INSIDE) {
+		public static void DrawCube(Vector2 center, Vector2 size, Color color, Alignment align = Alignment.CENTERED) {
             Camera camera = ObjectFinder.mainCam;
             if (!camera) {
                 return;
             }
 
-            LineWidth *= (0.01f * (camera.orthographicSize/3));
+            var lineWidth = 1 * (0.01f * (camera.orthographicSize/3));
 
             #region Matrix
 
@@ -37,56 +37,60 @@ namespace Gex.Library {
             GL.Color(color);
             GL.LoadProjectionMatrix(camera.projectionMatrix);
 
-            Vector3 bottomLeft = new Vector2(center.x - size.x / 2, center.y - size.y/2);     // Bottom Left
-            Vector3 topLeft = new Vector2(center.x - size.x/2, center.y + size.y/2);        // Top Left
-            Vector3 topRight = new Vector2(center.x + size.x/2, center.y + size.y/2);       // Top Right
-            Vector3 bottomRight = new Vector2(center.x + size.x/2, center.y - size.y/2);    // Bottom Righ
+            Vector2 bottomLeft = new Vector2(center.x - size.x / 2, center.y - size.y/2);     // Bottom Left
+            Vector2 topLeft = new Vector2(center.x - size.x/2, center.y + size.y/2);        // Top Left
+            Vector2 topRight = new Vector2(center.x + size.x/2, center.y + size.y/2);       // Top Right
+            Vector2 bottomRight = new Vector2(center.x + size.x/2, center.y - size.y/2);    // Bottom Righ
 
-            Vector3 offsetX = new Vector3(LineWidth, 0, 0);
-            Vector3 offsetY = new Vector3(0, LineWidth * (byte)align, 0);
-            Vector3 offsetXY = new Vector3(LineWidth, LineWidth, 0);
-            Vector3 offsetXY2 = new Vector3(LineWidth, -LineWidth, 0);
+            Vector2 offsetX = new Vector2(lineWidth/2, 0);
+            Vector2 offsetY = new Vector2(0, lineWidth/2);
 
-            GL.Vertex(bottomLeft - offsetY);
-            GL.Vertex(topLeft + offsetY);
-            if (align == Alignment.INSIDE) {
-                GL.Vertex(topLeft + offsetX);
-                GL.Vertex(bottomLeft + offsetX);
-            } else {
-                GL.Vertex(topLeft - offsetXY2);
-                GL.Vertex(bottomLeft - offsetXY);
-            }
+            switch (align) {
+                case Alignment.CENTERED:
+                    GL.Vertex(bottomLeft - offsetX);
+                    GL.Vertex(topLeft - offsetX);
+                    GL.Vertex(topLeft + offsetX);
+                    GL.Vertex(bottomLeft + offsetX);
+            
+                    GL.Vertex(topLeft - offsetY);
+                    GL.Vertex(topRight - offsetY);
+                    GL.Vertex(topRight + offsetY);
+                    GL.Vertex(topLeft + offsetY);
 
-            GL.Vertex(topLeft);
-            GL.Vertex(topRight);
-            if (align == Alignment.INSIDE) {
-                GL.Vertex3(topRight.x, topRight.y - LineWidth, topRight.z);
-                GL.Vertex3(topLeft.x, topLeft.y - LineWidth, topLeft.z);
-            } else {
-                GL.Vertex3(topRight.x, topRight.y + LineWidth, topRight.z);
-                GL.Vertex3(topLeft.x, topLeft.y + LineWidth, topLeft.z);
-            }
+                    GL.Vertex(topRight + offsetX);
+                    GL.Vertex(bottomRight + offsetX);
+                    GL.Vertex(bottomRight - offsetX);
+                    GL.Vertex(topRight - offsetX);
 
-            GL.Vertex(topRight + offsetY);
-            GL.Vertex(bottomRight - offsetY);
-            if (align == Alignment.INSIDE) {
-                GL.Vertex(bottomRight - offsetX);
-                GL.Vertex(topRight - offsetX);
-            } else {
-                GL.Vertex(bottomRight + offsetXY2);
-                GL.Vertex(topRight + offsetXY);
-            }
+                    GL.Vertex(bottomRight + offsetY);
+                    GL.Vertex(bottomLeft + offsetY);
+                    GL.Vertex(bottomLeft - offsetY);
+                    GL.Vertex(bottomRight - offsetY);
+                    break;
+                case Alignment.INSIDE:
+                    GL.Vertex(bottomLeft);
+                    GL.Vertex(topLeft);
+                    GL.Vertex(topLeft + offsetX*2);
+                    GL.Vertex(bottomLeft + offsetX*2);
+            
+                    GL.Vertex(topLeft - offsetY*2);
+                    GL.Vertex(topRight - offsetY*2);
+                    GL.Vertex(topRight);
+                    GL.Vertex(topLeft);
 
-            GL.Vertex(bottomRight);
-            GL.Vertex(bottomLeft);
-            if (align == Alignment.INSIDE) {
-                GL.Vertex3(bottomLeft.x, bottomLeft.y + LineWidth, bottomLeft.z);
-                GL.Vertex3(bottomRight.x, bottomRight.y + LineWidth, bottomRight.z);
-            } else {
-                GL.Vertex3(bottomLeft.x, bottomLeft.y - LineWidth, bottomLeft.z);
-                GL.Vertex3(bottomRight.x, bottomRight.y - LineWidth, bottomRight.z);
+                    GL.Vertex(topRight);
+                    GL.Vertex(bottomRight);
+                    GL.Vertex(bottomRight - offsetX*2);
+                    GL.Vertex(topRight - offsetX*2);
+
+                    GL.Vertex(bottomRight + offsetY*2);
+                    GL.Vertex(bottomLeft + offsetY*2);
+                    GL.Vertex(bottomLeft);
+                    GL.Vertex(bottomRight);
+                    break;
             }
             
+
 
             GL.End();
             GL.PopMatrix();
@@ -96,7 +100,7 @@ namespace Gex.Library {
         public enum Alignment : byte
         {
             INSIDE,
-            OUTSIDE,
+            CENTERED,
         }
 
 	}
