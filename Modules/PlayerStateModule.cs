@@ -30,16 +30,17 @@ namespace Gex.Modules {
 
         private void OnGUI() {
             if (show) {
-                wRect = GUILayout.Window(7878003, wRect, ItemWindow, "State manager");
+                wRect = GexGUISkin.Window(7878003, wRect, ItemWindow);
             }
         }
 
         private void ItemWindow(int id)
         {
+            GexGUISkin.WindowHeader("State manager");
             GUILayout.BeginHorizontal();
 
-                GUILayout.BeginVertical();
-                    GUILayout.Label("General");
+                GUILayout.BeginVertical(GexGUISkin.section);
+                    GexGUISkin.SectionHeader("General");
                     if (GUILayout.Button("Change Dimension")) {
                         DimensionManager.Instance.SetDimension(DimensionManager.Instance.CurrentDimension == EBits.BITS_8 ? EBits.BITS_16 : EBits.BITS_8);
                     }
@@ -50,15 +51,15 @@ namespace Gex.Modules {
 
                     GUILayout.Space(30);
 
-                    GUILayout.Label("Player state");
+                    GexGUISkin.SectionHeader("Player state");
                     GUILayout.Label(lastStates.Count.ToString());
                     foreach(string state in lastStates) {
                         GUILayout.Label(state);
                     }
                 GUILayout.EndVertical();
 
-                GUILayout.BeginVertical();
-                    GUILayout.Label("Load");
+                GUILayout.BeginVertical(GexGUISkin.section);
+                    GexGUISkin.SectionHeader("Load");
                     if (GUILayout.Button("Checkpoint")) {
                         ReloadCheckpoint();
                     }
@@ -67,8 +68,8 @@ namespace Gex.Modules {
                     }
                 GUILayout.EndVertical();
 
-                GUILayout.BeginVertical();
-                    GUILayout.Label("Load level");
+                GUILayout.BeginVertical(GexGUISkin.section);
+                    GexGUISkin.SectionHeader("Load level");
 
                     GUILayout.BeginHorizontal();
                         GUILayout.BeginVertical();

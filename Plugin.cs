@@ -26,6 +26,10 @@ namespace Gex
         public ConfigEntry<bool> configBlazeLBUpdates;
 
         private void Awake() {
+            //Patch
+            harmony.PatchAll(typeof(TitleScreenPatches));
+            harmony.PatchAll(typeof(IntroManagerPatches));
+
             //Internals;
             Instance = this;
             Log = Logger;
@@ -41,6 +45,7 @@ namespace Gex
 
             //Initialize statics
             Drawer.InitializeDrawer();
+            GexGUISkin.InitializeSkin();
         
             //We loaded
             Log.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");

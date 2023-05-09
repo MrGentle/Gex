@@ -44,19 +44,20 @@ namespace Gex.Modules {
         }
 
         private void GUIWindow(int id) {
-            GUILayout.Label("Hold left shift and left click to teleport player to cursor");
-            GUILayout.Label("Numpad 4-9(Default) to control the free camera");
+            GexGUISkin.WindowHeader("Free cam");
+            GexGUISkin.WindowLabel("Hold left shift and left click to teleport player to cursor");
+            GexGUISkin.WindowLabel("Numpad 4-9(Default) to control the free camera");
             GUILayout.BeginHorizontal();
-                GUILayout.BeginVertical();
-                    GUILayout.Label("Boxdrawer");
+                GUILayout.BeginVertical(GexGUISkin.section);
+                    GexGUISkin.SectionHeader("Boxdrawer");
                     showGround = GUILayout.Toggle(showGround, "Ground");
                     showPlayer = GUILayout.Toggle(showPlayer, "Player");
                     showGPIs = GUILayout.Toggle(showGPIs, "Interactables");
                     edgeAligned = GUILayout.Toggle(edgeAligned, "Edge align hitboxes");
                 GUILayout.EndVertical();
 
-                GUILayout.BeginVertical();
-                    GUILayout.Label("Settings");
+                GUILayout.BeginVertical(GexGUISkin.section);
+                    GexGUISkin.SectionHeader("Settings");
                     renderPlayerInFront = GUILayout.Toggle(renderPlayerInFront, "Render player in front");
                     disableCamOnPlayerTeleport = GUILayout.Toggle(disableCamOnPlayerTeleport, "Disable cam when placing player");
                 GUILayout.EndVertical();
@@ -237,7 +238,7 @@ namespace Gex.Modules {
         }
 
         private void OnGUI() {
-            if (active) wRect = GUILayout.Window(7878002, wRect, GUIWindow, "Free cam");
+            if (active) wRect = GexGUISkin.Window(7878002, wRect, GUIWindow);
         }
 
     }

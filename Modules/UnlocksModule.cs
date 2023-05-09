@@ -15,11 +15,13 @@ namespace Gex.Modules
 
         public static bool godmode = false;
         public static bool noDamage = false;
+        public static bool dealNoDamage = false;
         public static bool infiniteShurikens = false;
 
         void Awake() {
             Plugin.harmony.PatchAll(typeof(InvincibilityPatch));
             Plugin.harmony.PatchAll(typeof(ShurikenPatch));
+            Plugin.harmony.PatchAll(typeof(HittablePatch));
         }
 
         private void Update() {
@@ -31,15 +33,16 @@ namespace Gex.Modules
 
         private void OnGUI() {
             if (show) {
-                wRect = GUILayout.Window(7878001, wRect, ItemWindow, "Items and Unlocks");
+                wRect = GexGUISkin.Window(7878001, wRect, ItemWindow);
             }
         }
 
         private void ItemWindow(int id) {
+            GexGUISkin.WindowHeader("Items and Unlocks");
             GUILayout.BeginHorizontal();
 
-                GUILayout.BeginVertical();
-                    GUILayout.Label("Gear");
+                GUILayout.BeginVertical(GexGUISkin.section);
+                    GexGUISkin.SectionHeader("Gear");
                     ItemToggle(EItems.CLIMBING_CLAWS, "Climbing claws");
                     ItemToggle(EItems.WINGSUIT, "Wingsuit");
                     ItemToggle(EItems.GRAPLOU, "Rope dart");
@@ -47,8 +50,8 @@ namespace Gex.Modules
                     ItemToggle(EItems.MAGIC_BOOTS, "Lightfoot Tabi");
                 GUILayout.EndVertical();
 
-                GUILayout.BeginVertical();
-                    GUILayout.Label("Upgrades");
+                GUILayout.BeginVertical(GexGUISkin.section);
+                    GexGUISkin.SectionHeader("Upgrades");
                     ItemToggle(EItems.SHURIKEN, "Energy shuriken", EShopUpgradeID.SHURIKEN);
                     ItemToggle(EItems.ATTACK_PROJECTILES, "Attack projectiles", EShopUpgradeID.ATTACK_PROJECTILE);
                     ItemToggle(EItems.AIR_RECOVER, "Air recover", EShopUpgradeID.AIR_RECOVER);
@@ -57,10 +60,11 @@ namespace Gex.Modules
                     ItemToggle(EItems.CHARGED_ATTACK, "Charged attack", EShopUpgradeID.CHARGED_ATTACK);
                 GUILayout.EndVertical();
 
-                GUILayout.BeginVertical();
-                    GUILayout.Label("Cheats");
+                GUILayout.BeginVertical(GexGUISkin.section);
+                    GexGUISkin.SectionHeader("Cheats");
                     godmode = GUILayout.Toggle(godmode, "Godmode");
                     noDamage = GUILayout.Toggle(noDamage, "No Damage");
+                    dealNoDamage = GUILayout.Toggle(dealNoDamage, "Deal no damage");
                     infiniteShurikens = GUILayout.Toggle(infiniteShurikens, "Infinite shurikens");
                     if (GUILayout.Button("Gain 10000 time shards")) {
                         InventoryManager.Instance.AddItem(EItems.TIME_SHARD, 10000);
@@ -136,6 +140,15 @@ namespace Gex.Modules
         [HarmonyPrefix]
         static bool ThrowShurikenPrefix() {
             PlayerManager.Instance.PlayerShurikens++;
+            return true;
+        }
+    }
+
+    public static class HittablePatch {
+        [HarmonyPatch(typeof(Hittable), "ReceiveHit")]
+        [HarmonyPrefix]
+        static bool ReceiveHitPrefix(ref HitData __0) {
+            if (UnlocksModule.dealNoDamage) __0.damage = 0;
             return true;
         }
     }

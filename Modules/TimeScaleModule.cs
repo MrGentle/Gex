@@ -7,9 +7,7 @@ using UnityEngine;
 
 namespace Gex.Modules {
 	internal class TimeScaleModule : MonoBehaviour {
-		
 		bool activated = false;
-		bool advance = false;
 		
 		void Update() {
 			if (Input.GetKeyDown(KeyCode.Y)) {
@@ -27,7 +25,9 @@ namespace Gex.Modules {
 
 		void OnGUI() {
 			GUILayout.BeginArea(new Rect(20, Screen.height - 300, 300, 280));
-			GUILayout.Label("Velocity: " + PlayerManager.Instance.Player.Velocity.ToString());
+			if (PlayerManager.Instance && PlayerManager.Instance.Player && activated) {
+				GUILayout.Label("Velocity: " + PlayerManager.Instance.Player.Velocity.ToString());
+			}
 			GUILayout.EndArea();
 		}
 
